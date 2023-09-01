@@ -7,6 +7,7 @@ package chat;
 service Chat {
   rpc EnterChat (EnterRequest) returns (stream ChatMessage);
   rpc SendMessage (ChatMessage) returns (MessageResponse);
+  rpc SendMessageStream (stream ChatMessage) returns (MessageResponse);
 }
  
 message EnterRequest {
