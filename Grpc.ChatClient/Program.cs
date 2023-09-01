@@ -11,6 +11,9 @@ var name = Console.ReadLine();
 
 var reply = client.EnterChat(new EnterRequest { Name = name });
 
+using var messageStream = client.SendMessageStream();
+
+
 var writeThread = new Thread(async () =>
 {
     while (true)
@@ -32,7 +35,7 @@ while (true)
     Console.SetCursorPosition(0, Console.CursorTop - 1);
     ClearLine();
 
-    client.SendMessage(new ChatMessage { Message = $"{DateTime.UtcNow}, {name}: {message}"});
+    await messageStream.RequestStream.WriteAsync(new ChatMessage { Message = $"{DateTime.UtcNow}, {name}: {message}" });
 }
 
 void ClearLine()
