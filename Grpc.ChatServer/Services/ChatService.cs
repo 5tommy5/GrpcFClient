@@ -11,24 +11,15 @@ namespace Grpc.ChatServer.Services
             _logger = logger;
             _streamingService = streamingService;
         }
-
-        public override async Task EnterChat(EnterRequest request, IServerStreamWriter<ChatMessage> responseStream, ServerCallContext context)
+        public override async Task SendMessage(IAsyncStreamReader<ChatMessage> requestStream, IServerStreamWriter<ChatMessage> responseStream, ServerCallContext context)
         {
-            _logger.LogInformation($"{request.Name} is entered the chat.");
-
             _streamingService.Subscribe(responseStream);
 
-            await _streamingService.SendMessage(new ChatMessage { Message = $"User with name {request.Name} entered the chat." });
-
-            WaitForMessages();
-        }
-
-        public override async Task<MessageResponse> SendMessage(ChatMessage request, ServerCallContext context)
-        {
-            _logger.LogInformation($"{request.Message} is received.");
-
-            await _streamingService.SendMessage(request);
-            return new MessageResponse() { Ok = true };
+            await foreach(var message in requestStream.ReadAllAsync())
+            {
+                _logger.LogInformation($"Received message: {message.Message}");
+                await _streamingService.SendMessage(message);
+            }
         }
 
         public void WaitForMessages()
