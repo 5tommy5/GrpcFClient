@@ -31,6 +31,18 @@ namespace Grpc.ChatServer.Services
             return new MessageResponse() { Ok = true };
         }
 
+        public override async Task<MessageResponse> SendMessageStream(IAsyncStreamReader<ChatMessage> requestStream, ServerCallContext context)
+        {
+            await foreach(var message in requestStream.ReadAllAsync())
+            {
+                _logger.LogInformation($"{message.Message} is received.");
+
+                await _streamingService.SendMessage(message);
+            }
+
+            return new MessageResponse() { Ok = true };
+        }
+
         public void WaitForMessages()
         {
             while (true)
