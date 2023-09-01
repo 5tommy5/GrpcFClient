@@ -9,13 +9,15 @@ var client = new Chat.ChatClient(channel);
 Console.Write("Name: ");
 var name = Console.ReadLine();
 
-var reply = client.EnterChat(new EnterRequest { Name = name });
+using var stream = client.SendMessage();
+var requestStream = stream.RequestStream;
+var responseStream = stream.ResponseStream;
 
 var writeThread = new Thread(async () =>
 {
     while (true)
     {
-        await foreach (var message in reply.ResponseStream.ReadAllAsync())
+        await foreach (var message in responseStream.ReadAllAsync())
         {
             Console.WriteLine(message.Message);
         }
@@ -32,7 +34,7 @@ while (true)
     Console.SetCursorPosition(0, Console.CursorTop - 1);
     ClearLine();
 
-    client.SendMessage(new ChatMessage { Message = $"{DateTime.UtcNow}, {name}: {message}"});
+    await requestStream.WriteAsync(new ChatMessage { Message = $"{DateTime.UtcNow}, {name}: {message}"});
 }
 
 void ClearLine()
